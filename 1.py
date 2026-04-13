@@ -211,7 +211,7 @@ class AlphabetCipher:
                     result += self.subtract_symbols(t, "_")
         return result
 
-    def frw_cesar(self, text: str, key: str):
+    def frw_caesar(self, text: str, key: str):
         """
         Шифрует текст с использованием шифра Цезаря с заданным ключом-символом.
 
@@ -234,7 +234,7 @@ class AlphabetCipher:
             out += self.add_symbols(text[i] , key_1)
         return out
 
-    def inv_cesar(self, text: str, key: str) -> str:
+    def inv_caesar(self, text: str, key: str) -> str:
         """
         Расшифровывает текст, зашифрованный шифром Цезаря, с использованием заданного ключа-символа.
 
@@ -257,7 +257,7 @@ class AlphabetCipher:
             out += self.subtract_symbols(text[i], key_1)
         return out
 
-    def frw_poly_cesar(self, text: str, key: str) -> str:
+    def frw_poly_caesar(self, text: str, key: str) -> str:
         """
         Шифрует текст с использованием полиалфавитного шифра Цезаря.
 
@@ -281,7 +281,7 @@ class AlphabetCipher:
             out += self.add_symbols(text[i], t_k)
         return out
 
-    def inv_poly_cesar(self, text: str, key: str) -> str:
+    def inv_poly_caesar(self, text: str, key: str) -> str:
         """
         Расшифровывает текст, зашифрованный полиалфавитным шифром Цезаря.
 
@@ -305,6 +305,103 @@ class AlphabetCipher:
         for i in range(len(text)):
             t_k = self.add_symbols(t_k, key[i % key_len])
             out += self.subtract_symbols(text[i], t_k)
+
+        return out
+
+    def _generate_s_key(self, KEY_IN):
+        """
+        Вспомогательный метод для генерации ключа KEY_TMP согласно алгоритму S-блока.
+        Используется как в frw_S_Caesar, так и в inv_S_Caesar.
+        """
+        # C <- [1 -1 1 2 -2 1 1 3 -1 2]^T
+        C = [1, -1, 1, 2, -2, 1, 1, 3, -1, 2]
+
+        # KEY_TMP <- "____"
+        KEY_TMP = "____"
+
+        # KEY_EXT <- concat(KEY_IN, KEY_IN)
+        KEY_EXT = KEY_IN + KEY_IN
+
+        # for i in 0, 1..7
+        for i in range(8):
+            # S_TMP <- substr(KEY_EXT, i*2, 4)
+            # В Python срез [start : start+length]
+            start_idx = i * 2
+            S_TMP = KEY_EXT[start_idx: start_idx + 4]
+
+            # B_TMP <- text2array(S_TMP)
+            # Преобразуем строку из 4 символов в список чисел (0-31)
+            B_TMP = [self.get_number_by_symbol(char) for char in S_TMP]
+
+            A_TMP_NUMS = []
+            # for k in 0, 1..3
+            for k in range(4):
+                # x <- mod(2 * i + k, 10)
+                x = (2 * i + k) % 10
+
+                # A_TMP_k <- mod(64 + k + C_x * B_TMP_k, 32)
+                # В Python оператор % для отрицательных чисел работает математически корректно
+                # (например, -1 % 32 = 31), поэтому 64 можно опустить, но оставим для точности
+                # соответствия формуле.
+                c_val = C[x]
+                b_val = B_TMP[k]
+
+                val = (64 + k + c_val * b_val) % 32
+                A_TMP_NUMS.append(val)
+
+            # array2text(A_TMP) -> преобразуем список чисел обратно в строку
+            A_TMP_STR = "".join([self.get_symbol_by_number(n) for n in A_TMP_NUMS])
+
+            # KEY_TMP <- add_txt(KEY_TMP, array2text(A_TMP))
+            # Используем существующий метод add_text для модульного сложения строк
+            KEY_TMP = self.add_text(KEY_TMP, A_TMP_STR)
+
+        return KEY_TMP
+
+    def frw_S_caesar(self, BLOCK_IN, KEY_IN):
+        """
+        Шифрование S-блока (прямое преобразование).
+        """
+        # if (strlen(BLOCK_IN) == 4) ^ (strlen(KEY_IN) == 16) -> input_error
+        # В условии изображения используется логическое И (and), судя по символу ^,
+        # который в некоторых псевдокодах означает И, либо это опечатка и должно быть AND.
+        # Однако, глядя на структуру "if ... then error", обычно проверяют на НЕсоответствие.
+        # Но в вашем условии написано: if (len==4) AND (len==16) then error?
+        # Нет, скорее всего там проверка на ошибку: если НЕ (4 и 16), то ошибка.
+        # Или же символ ^ означает XOR?
+        # Давайте посмотрим на контекст: "input_error" возвращается при неверных размерах.
+        # Значит, если длина блока НЕ 4 ИЛИ длина ключа НЕ 16 -> ошибка.
+
+        if len(BLOCK_IN) != 4 or len(KEY_IN) != 16:
+            return "input_error"
+
+        # out <- BLOCK_IN
+        out = BLOCK_IN
+
+        # Генерация KEY_TMP
+        KEY_TMP = self._generate_s_key(KEY_IN)
+
+        # out <- frw_poly_Caesar(out, KEY_TMP)
+        out = self.frw_poly_caesar(out, KEY_TMP)
+
+        return out
+
+    def inv_S_caesar(self, BLOCK_IN, KEY_IN):
+        """
+        Расшифрование S-блока (обратное преобразование).
+        """
+        # Проверка входных данных
+        if len(BLOCK_IN) != 4 or len(KEY_IN) != 16:
+            return "input_error"
+
+        # out <- BLOCK_IN
+        out = BLOCK_IN
+
+        # Генерация KEY_TMP (логика идентична прямому алгоритму)
+        KEY_TMP = self._generate_s_key(KEY_IN)
+
+        # out <- inv_poly_Caesar(out, KEY_TMP)
+        out = self.inv_poly_caesar(out, KEY_TMP)
 
         return out
 
