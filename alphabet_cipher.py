@@ -63,12 +63,12 @@ class AlphabetCipher:
             return self.symbol_to_number[symbol]
         raise ValueError(f"Символ '{symbol}' отсутствует в алфавите")
 
-    def encrypt(self, text: str):
+    def encrypt(self, text_input: str):
         """
         Кодирует текстовую строку в список 5-битных бинарных кодов.
 
         Args:
-            text: Исходная строка для шифрования. Автоматически приводится к верхнему регистру.
+            text_input: Исходная строка для шифрования. Автоматически приводится к верхнему регистру.
 
         Returns:
             Список строк, где каждый элемент — 5-битный бинарный код соответствующего символа.
@@ -77,7 +77,7 @@ class AlphabetCipher:
             KeyError: Если в тексте встречается неподдерживаемый символ.
         """
         res = []
-        for char in text.upper():
+        for char in text_input.upper():
             res.append(self.symbol_to_code[char])
         return res
 
@@ -211,7 +211,7 @@ class AlphabetCipher:
                     result += self.subtract_symbols(t, "_")
         return result
 
-    def frw_caesar(self, text: str, key: str):
+    def frw_caesar(self, text_input, key_input):
         """
         Шифрует текст с использованием шифра Цезаря с заданным ключом-символом.
 
@@ -222,19 +222,19 @@ class AlphabetCipher:
         3. Возвращает зашифрованный текст
 
         Args:
-            text: Исходный текст для шифрования
-            key: Ключ - символ для сдвига (используется первый символ)
+            text_input: Исходный текст для шифрования
+            key_input: Ключ - символ для сдвига (используется первый символ)
 
         Returns:
             Зашифрованный текст (str)
         """
         out = ""
-        key_1 = key[0]
-        for i in range(len(text)):
-            out += self.add_symbols(text[i] , key_1)
+        key_1 = key_input[0]
+        for i in range(len(text_input)):
+            out += self.add_symbols(text_input[i], key_1)
         return out
 
-    def inv_caesar(self, text: str, key: str) -> str:
+    def inv_caesar(self, text_input, key_input):
         """
         Расшифровывает текст, зашифрованный шифром Цезаря, с использованием заданного ключа-символа.
 
@@ -245,19 +245,19 @@ class AlphabetCipher:
         3. Возвращает расшифрованный текст
 
         Args:
-            text: Зашифрованный текст для расшифровки
-            key: Ключ - символ, использованный при шифровании (используется первый символ)
+            text_input: Зашифрованный текст для расшифровки
+            key_input: Ключ - символ, использованный при шифровании (используется первый символ)
 
         Returns:
             Расшифрованный текст (str)
         """
         out = ""
-        key_1 = key[0]
-        for i in range(len(text)):
-            out += self.subtract_symbols(text[i], key_1)
+        key_1 = key_input[0]
+        for i in range(len(text_input)):
+            out += self.subtract_symbols(text_input[i], key_1)
         return out
 
-    def frw_poly_caesar(self, text: str, key: str) -> str:
+    def frw_poly_caesar(self, text_input, key_input):
         """
         Шифрует текст с использованием полиалфавитного шифра Цезаря.
 
@@ -267,21 +267,21 @@ class AlphabetCipher:
         3. Каждый символ текста складывается с текущим значением накопленной суммы ключа
 
         Args:
-            text: Исходный текст для шифрования
-            key: Ключ - строка символов
+            text_input: Исходный текст для шифрования
+            key_input: Ключ - строка символов
 
         Returns:
             Зашифрованный текст (str)
         """
         out = ""
         t_k = "_"
-        key_len = len(key)
-        for i in range(len(text)):
-            t_k = self.add_symbols(t_k, key[i % key_len])
-            out += self.add_symbols(text[i], t_k)
+        key_len = len(key_input)
+        for i in range(len(text_input)):
+            t_k = self.add_symbols(t_k, key_input[i % key_len])
+            out += self.add_symbols(text_input[i], t_k)
         return out
 
-    def inv_poly_caesar(self, text: str, key: str) -> str:
+    def inv_poly_caesar(self, text_input, key_input):
         """
         Расшифровывает текст, зашифрованный полиалфавитным шифром Цезаря.
 
@@ -292,121 +292,329 @@ class AlphabetCipher:
         4. Расшифровывает символ: вычитает текущее t_k из символа шифротекста.
 
         Args:
-            text: Зашифрованный текст.
-            key: Ключ, использованный при шифровании.
+            text_input: Зашифрованный текст.
+            key_input: Ключ, использованный при шифровании.
 
         Returns:
             Расшифрованный исходный текст (str).
         """
         out = ""
         t_k = "_"
-        key_len = len(key)
+        key_len = len(key_input)
 
-        for i in range(len(text)):
-            t_k = self.add_symbols(t_k, key[i % key_len])
-            out += self.subtract_symbols(text[i], t_k)
+        for i in range(len(text_input)):
+            t_k = self.add_symbols(t_k, key_input[i % key_len])
+            out += self.subtract_symbols(text_input[i], t_k)
 
         return out
 
-    def _generate_s_key(self, KEY_IN):
+    def _generate_s_key(self, key_input):
         """
-        Вспомогательный метод для генерации ключа KEY_TMP согласно алгоритму S-блока.
-        Используется как в frw_S_Caesar, так и в inv_S_Caesar.
+        Генерирует производный ключ для S-блока на основе входного ключа.
+
+        Алгоритм генерации:
+        1. Создаёт расширенный ключ путём конкатенации входного ключа с самим собой
+        2. Инициализирует производный ключ четырьмя символами '_' (нулевое значение)
+        3. Выполняет 8 итераций:
+           a. Извлекает подстроку длиной 4 символа из расширенного ключа со сдвигом
+           b. Преобразует подстроку в массив числовых индексов (0-31)
+           c. Для каждого из 4-х символов применяет нелинейное преобразование
+              с использованием вектора коэффициентов
+           d. Преобразует результат обратно в строку символов
+           e. Добавляет полученную строку к производному ключу по модулю 32
+        4. Возвращает итоговый производный ключ длиной 4 символа
+
+        Args:
+            key_input: Входной ключ длиной ровно 16 символов.
+
+        Returns:
+            derived_key: Сгенерированный ключ длиной 4 символа для использования
+                        в полиалфавитном шифре Цезаря.
+
+        Note:
+            Вектор коэффициентов используется для нелинейного преобразования
+            символов ключа, что повышает криптостойкость алгоритма.
         """
-        # C <- [1 -1 1 2 -2 1 1 3 -1 2]^T
-        C = [1, -1, 1, 2, -2, 1, 1, 3, -1, 2]
-
-        # KEY_TMP <- "____"
-        KEY_TMP = "____"
-
-        # KEY_EXT <- concat(KEY_IN, KEY_IN)
-        KEY_EXT = KEY_IN + KEY_IN
-
-        # for i in 0, 1..7
+        # Вектор коэффициентов для нелинейного преобразования ключа
+        transform_coefficients = [1, -1, 1, 2, -2, 1, 1, 3, -1, 2]
+        # Инициализация производного ключа нулевыми значениями ('_' = 0)
+        derived_key = "____"
+        # Расширение ключа: дублирование для возможности извлечения подстрок со сдвигом
+        extended_key = key_input + key_input
+        # Основной цикл генерации: 8 итераций для накопления нелинейных преобразований
         for i in range(8):
-            # S_TMP <- substr(KEY_EXT, i*2, 4)
-            # В Python срез [start : start+length]
-            start_idx = i * 2
-            S_TMP = KEY_EXT[start_idx: start_idx + 4]
-
-            # B_TMP <- text2array(S_TMP)
-            # Преобразуем строку из 4 символов в список чисел (0-31)
-            B_TMP = [self.get_number_by_symbol(char) for char in S_TMP]
-
-            A_TMP_NUMS = []
-            # for k in 0, 1..3
+            # Вычисление начальной позиции для извлечения 4-символьной подстроки
+            # Сдвиг на 2 позиции на каждой итерации (0, 2, 4, 6, 8, 10, 12, 14)
+            start_position = i * 2
+            # Извлечение подстроки длиной 4 символа из расширенного ключа
+            key_substring = extended_key[start_position: start_position + 4]
+            # Преобразование символов подстроки в числовые индексы (0-31)
+            substring_indices = [self.get_number_by_symbol(char) for char in key_substring]
+            # Массив для хранения преобразованных индексов
+            transformed_indices = []
+            # Нелинейное преобразование каждого из 4-х символов подстроки
             for k in range(4):
-                # x <- mod(2 * i + k, 10)
-                x = (2 * i + k) % 10
+                # Вычисление индекса для доступа к вектору коэффициентов
+                # Формула: (2 * i + k) mod 10
+                coeff_index = (2 * i + k) % 10
+                # Получение коэффициента из вектора и значения из подстроки
+                coefficient = transform_coefficients[coeff_index]
+                symbol_index = substring_indices[k]
+                # Формула нелинейного преобразования: (64 + k + C[x] * B[k]) mod 32
+                # 64 гарантирует положительность перед взятием mod
+                transformed_index = (64 + k + coefficient * symbol_index) % 32
+                transformed_indices.append(transformed_index)
+            # Преобразование преобразованных индексов обратно в строку символов
+            transformed_chunk = "".join([self.get_symbol_by_number(n) for n in transformed_indices])
+            # Накопление результата: сложение с текущим derived_key по модулю 32
+            derived_key = self.add_text(derived_key, transformed_chunk)
+        return derived_key
 
-                # A_TMP_k <- mod(64 + k + C_x * B_TMP_k, 32)
-                # В Python оператор % для отрицательных чисел работает математически корректно
-                # (например, -1 % 32 = 31), поэтому 64 можно опустить, но оставим для точности
-                # соответствия формуле.
-                c_val = C[x]
-                b_val = B_TMP[k]
-
-                val = (64 + k + c_val * b_val) % 32
-                A_TMP_NUMS.append(val)
-
-            # array2text(A_TMP) -> преобразуем список чисел обратно в строку
-            A_TMP_STR = "".join([self.get_symbol_by_number(n) for n in A_TMP_NUMS])
-
-            # KEY_TMP <- add_txt(KEY_TMP, array2text(A_TMP))
-            # Используем существующий метод add_text для модульного сложения строк
-            KEY_TMP = self.add_text(KEY_TMP, A_TMP_STR)
-
-        return KEY_TMP
-
-    def frw_S_caesar(self, BLOCK_IN, KEY_IN):
+    def frw_S_caesar(self, text_input, key_input):
         """
-        Шифрование S-блока (прямое преобразование).
-        """
-        # if (strlen(BLOCK_IN) == 4) ^ (strlen(KEY_IN) == 16) -> input_error
-        # В условии изображения используется логическое И (and), судя по символу ^,
-        # который в некоторых псевдокодах означает И, либо это опечатка и должно быть AND.
-        # Однако, глядя на структуру "if ... then error", обычно проверяют на НЕсоответствие.
-        # Но в вашем условии написано: if (len==4) AND (len==16) then error?
-        # Нет, скорее всего там проверка на ошибку: если НЕ (4 и 16), то ошибка.
-        # Или же символ ^ означает XOR?
-        # Давайте посмотрим на контекст: "input_error" возвращается при неверных размерах.
-        # Значит, если длина блока НЕ 4 ИЛИ длина ключа НЕ 16 -> ошибка.
+        Выполняет прямое шифрование S-блока (подстановочного блока).
 
-        if len(BLOCK_IN) != 4 or len(KEY_IN) != 16:
+        S-блок представляет собой унифицированный интерфейс к шифру замены,
+        который комбинирует нелинейное преобразование ключа с полиалфавитным
+        шифром Цезаря.
+
+        Алгоритм работы:
+        1. Проверяет корректность входных данных:
+           - text_input должен содержать ровно 4 символа (открытый текст)
+           - key_input должен содержать ровно 16 символов (основной ключ)
+        2. Генерирует производный ключ KEY_TMP длиной 4 символа из key_input
+           с использованием нелинейных преобразований (см. _generate_s_key)
+        3. Применяет полиалфавитный шифр Цезаря к text_input с производным ключом
+           (накопительное сложение символов текста с символами ключа по модулю 32)
+        4. Возвращает зашифрованный блок длиной 4 символа
+
+        Args:
+            text_input: Блок открытого текста длиной ровно 4 символа.
+                     Каждый символ должен принадлежать алфавиту (0-31).
+            key_input: Основной ключ длиной ровно 16 символов.
+                   Используется для генерации рабочего ключа.
+
+        Returns:
+            str: Зашифрованный блок (шифротекст) длиной 4 символа,
+                 либо строка "input_error" при неверных размерах входных данных.
+        """
+        # Проверка корректности входных данных
+        if len(text_input) != 4 or len(key_input) != 16:
             return "input_error"
+        # Инициализация выходного блока входным открытым текстом
+        ciphertext_block = text_input
+        # Генерация производного ключа (4 символа) из основного ключа (16 символов)
+        # Используется нелинейное преобразование с вектором коэффициентов
+        working_key = self._generate_s_key(key_input)
+        # Применение полиалфавитного шифра Цезаря с накопительным сложением
+        # Каждый символ текста складывается с накопительной суммой символов ключа
+        ciphertext_block = self.frw_poly_caesar(ciphertext_block, working_key)
+        return ciphertext_block
 
-        # out <- BLOCK_IN
-        out = BLOCK_IN
-
-        # Генерация KEY_TMP
-        KEY_TMP = self._generate_s_key(KEY_IN)
-
-        # out <- frw_poly_Caesar(out, KEY_TMP)
-        out = self.frw_poly_caesar(out, KEY_TMP)
-
-        return out
-
-    def inv_S_caesar(self, BLOCK_IN, KEY_IN):
+    def inv_S_caesar(self, text_input, key_input):
         """
-        Расшифрование S-блока (обратное преобразование).
+        Выполняет обратное шифрование (расшифрование) S-блока.
+
+        Является обратной операцией к frw_S_caesar. Восстанавливает исходный
+        открытый текст из зашифрованного блока при условии использования
+        того же самого ключа key_input.
+
+        Алгоритм работы:
+        1. Проверяет корректность входных данных:
+           - text_input должен содержать ровно 4 символа (шифротекст)
+           - key_input должен содержать ровно 16 символов (основной ключ)
+        2. Генерирует тот же самый производный ключ из key_input
+           (гарантируется детерминированность: тот же входной ключ → тот же производный ключ)
+        3. Применяет обратный полиалфавитный шифр Цезаря к text_input с производным ключом
+           (накопительное вычитание символов ключа из символов шифротекста по модулю 32)
+        4. Возвращает расшифрованный блок (исходный открытый текст)
+
+        Args:
+            text_input: Блок шифротекста длиной ровно 4 символа.
+                     Каждый символ должен принадлежать алфавиту (0-31).
+            key_input: Основной ключ длиной ровно 16 символов.
+                   Должен совпадать с ключом, использованным при шифровании.
+
+        Returns:
+            str: Расшифрованный блок (открытый текст) длиной 4 символа,
+                 либо строка "input_error" при неверных размерах входных данных.
+
+        Note:
+            Для корректной расшифровки необходимо использовать тот же самый
+            ключ key_input, что и при шифровании. Генерация производного ключа полностью
+            детерминирована, поэтому при одинаковых key_input получится
+            одинаковый производный ключ.
         """
-        # Проверка входных данных
-        if len(BLOCK_IN) != 4 or len(KEY_IN) != 16:
+        # Проверка корректности входных данных
+        if len(text_input) != 4 or len(key_input) != 16:
             return "input_error"
+        # Инициализация выходного блока зашифрованным текстом
+        plaintext_block = text_input
+        # Генерация того же производного ключа (детерминированный процесс)
+        # При одинаковом KEY_IN получится идентичный working_key
+        working_key = self._generate_s_key(key_input)
+        # Применение обратного полиалфавитного шифра Цезаря
+        # Накопительное вычитание символов ключа из шифротекста
+        plaintext_block = self.inv_poly_caesar(plaintext_block, working_key)
+        return plaintext_block
 
-        # out <- BLOCK_IN
-        out = BLOCK_IN
+    def frw_merge_block(self, text_input, key_input):
+        """
+        Прямое перемешивание блока (Forward Merge Block).
+        
+        Реализует алгоритм диффузии на основе ключа:
+        1. Преобразует ключ в массив числовых индексов
+        2. Вычисляет контрольную сумму (permutation seed) со знакопеременным сложением
+        3. На основе seed генерирует перестановку индексов [0,1,2,3]
+        4. Преобразует входной блок в массив индексов
+        5. Выполняет циклическое сложение символов блока в порядке перестановки
+        6. Преобразует результат обратно в текст
+        
+        Args:
+            text_input: Блок текста длиной 4 символа.
+            key_input: Ключ длиной 16 символов для генерации перестановки.
+            
+        Returns:
+            str: Перемешанный блок длиной 4 символа или "input_error".
+        """
+        # Проверка корректности входных данных
+        if len(text_input) != 4 or len(key_input) != 16:
+            return "input_error"
+        # Преобразование ключа в массив числовых индексов (0-31)
+        key_indices = [self.get_number_by_symbol(c) for c in key_input]
+        # Вычисление контрольной суммы (permutation seed)
+        # Знакопеременное сложение: +key[0] - key[1] + key[2] - key[3] ...
+        # Результат по модулю 24 (так как 4! = 24 возможных перестановок)
+        permutation_seed = 0
+        for i in range(16):
+            # Чередование знака: чётные позиции (+), нечётные (-)
+            coefficient_sign = 1 if i % 2 == 0 else -1
+            permutation_seed = (48 + permutation_seed + coefficient_sign * key_indices[i]) % 24
+        # Генерация перестановки индексов [0,1,2,3] на основе seed
+        # Используется модифицированный алгоритм Фишера-Йетса
+        shuffle_indices = [0, 1, 2, 3]
+        for k in range(3): # 3 шага для перестановки 4 элементов
+            # Вычисление позиции для обмена
+            swap_offset = permutation_seed % (4 - k)
+            # Обновление seed для следующего шага (целочисленное деление)
+            permutation_seed = (permutation_seed - swap_offset) // (4 - k)
+            # Обмен элементов местами
+            shuffle_indices[k], shuffle_indices[k + swap_offset] = shuffle_indices[k + swap_offset], shuffle_indices[k]
+        # Преобразование входного блока в массив числовых индексов
+        block_indices = [self.get_number_by_symbol(symbol) for symbol in text_input]
+        # Диффузия - смешивание символов блока
+        # Каждый символ складывается с другим в порядке, заданном перестановкой
+        for j in range(4):
+            # Индексы символов для операции сложения
+            source_idx = shuffle_indices[(1 + j) % 4]
+            target_idx = shuffle_indices[j % 4]
+            # Циклическое сложение по модулю 32
+            block_indices[source_idx] = (block_indices[source_idx] + block_indices[target_idx]) % 32
+        # Преобразование массива индексов обратно в текстовую строку
+        return "".join([self.get_symbol_by_number(n) for n in block_indices])
 
-        # Генерация KEY_TMP (логика идентична прямому алгоритму)
-        KEY_TMP = self._generate_s_key(KEY_IN)
+    def inv_merge_block(self, text_input, key_input):
+        """
+        Обратное перемешивание блока (Inverse Merge Block).
 
-        # out <- inv_poly_Caesar(out, KEY_TMP)
-        out = self.inv_poly_caesar(out, KEY_TMP)
+        Восстанавливает исходный блок из перемешанного:
+        1. Преобразует ключ в массив числовых индексов
+        2. Вычисляет ту же контрольную сумму (permutation seed)
+        3. Генерирует ту же перестановку индексов
+        4. Преобразует входной блок в массив индексов
+        5. Выполняет ОБРАТНЫЕ операции вычитания в ОБРАТНОМ порядке
+        6. Преобразует результат обратно в текст
 
-        return out
+        Args:
+            text_input: Перемешанный блок длиной 4 символа.
+            key_input: Ключ длиной 16 символов (тот же, что при шифровании).
+
+        Returns:
+            str: Восстановленный блок длиной 4 символа или "input_error".
+        """
+        # Проверка корректности входных данных
+        if len(text_input) != 4 or len(key_input) != 16:
+            return "input_error"
+        # Преобразование ключа в массив числовых индексов
+        key_indices = [self.get_number_by_symbol(c) for c in key_input]
+        # Вычисление той же контрольной суммы (permutation seed)
+        # Знакопеременное сложение (идентично прямому алгоритму)
+        permutation_seed = 0
+        for i in range(16):
+            coefficient_sign = 1 if i % 2 == 0 else -1
+            permutation_seed = (48 + permutation_seed + coefficient_sign * key_indices[i]) % 24
+        # Генерация той же перестановки индексов
+        shuffle_indices = [0, 1, 2, 3]
+        for k in range(3):
+            swap_offset = permutation_seed % (4 - k)
+            permutation_seed = (permutation_seed - swap_offset) // (4 - k)
+            shuffle_indices[k], shuffle_indices[k + swap_offset] = shuffle_indices[k + swap_offset], shuffle_indices[k]
+        # Преобразование входного блока в массив числовых индексов
+        block_indices = [self.get_number_by_symbol(c) for c in text_input]
+        # Обратная диффузия - восстановление исходного блока
+        # Цикл идёт в обратном порядке (3, 2, 1, 0)
+        # и используется вычитание вместо сложения
+        for j in range(3, -1, -1):
+            source_idx = shuffle_indices[(1 + j) % 4]
+            target_idx = shuffle_indices[j % 4]
+            # Циклическое вычитание по модулю 32
+            # Добавление 32 гарантирует положительность результата
+            block_indices[source_idx] = (32 + block_indices[source_idx] - block_indices[target_idx]) % 32
+        # Преобразование массива индексов обратно в текстовую строку
+        return "".join([self.get_symbol_by_number(n) for n in block_indices])
+    def frw_s_caesar_m(self, text_input, key_input):
+        """
+                Прямое шифрование с использованием комбинированного S-блока и перемешивания.
+
+                Алгоритм выполняет три этапа шифрования:
+                1. Первичное перемешивание блока (диффузия)
+                2. Нелинейная подстановка через S-блок (конфузия)
+                3. Вторичное перемешивание блока (диффузия)
+
+                Такая структура (перемешивание-подстановка-перемешивание) обеспечивает
+                хорошее распределение влияния каждого бита ключа и открытого текста
+                на зашифрованный результат.
+
+                Args:
+                    text_input: Блок открытого текста длиной 4 символа.
+                    key_input: Ключ шифрования длиной 16 символов.
+
+                Returns:
+                    str: Зашифрованный блок длиной 4 символа.
+                """
+        # Первичное перемешивание (диффузия)
+        temp_block = self.frw_merge_block(text_input, key_input)
+        # Нелинейная подстановка через S-блок (конфузия)
+        temp_block = self.frw_S_caesar(temp_block, key_input)
+        # Вторичное перемешивание (диффузия)
+        ciphertext_block = self.frw_merge_block(temp_block, key_input)
+        return ciphertext_block
+
+    def inv_s_caesar_m(self, text_input, key_input):
+        """
+        Обратное шифрование (расшифрование) с использованием комбинированного
+        S-блока и перемешивания.
+
+        Алгоритм выполняет три этапа расшифрования в порядке,
+        обратном прямому шифрованию:
+        1. Обратное вторичному перемешиванию
+        2. Обратная нелинейная подстановка через S-блок
+        3. Обратное первичному перемешиванию
+
+        Args:
+            text_input: Блок шифротекста длиной 4 символа.
+            key_input: Ключ шифрования длиной 16 символов (тот же, что при шифровании).
+
+        Returns:
+            str: Расшифрованный блок (открытый текст) длиной 4 символа.
+        """
+        # Обратное вторичному перемешиванию
+        temp_block = self.inv_merge_block(text_input, key_input)
+        # Обратная нелинейная подстановка через S-блок
+        temp_block = self.inv_S_caesar(temp_block, key_input)
+        # Обратное первичному перемешиванию
+        plaintext_block = self.inv_merge_block(temp_block, key_input)
+        return plaintext_block
 
 
 cipher = AlphabetCipher()
-
-
-
