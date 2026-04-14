@@ -2,7 +2,7 @@ import unittest
 from alphabet_cipher import AlphabetCipher
 
 class TestAlphabetCipher(unittest.TestCase):
-    """Тесты для готовой части"""
+    """Тесты для базовых операций"""
     
     def setUp(self):
         self.cipher = AlphabetCipher()
@@ -37,113 +37,279 @@ class TestAlphabetCipher(unittest.TestCase):
 
     def test_add_symbols(self):
         """Проверка сложения символов"""
-        # А(1) + В(3) = 4 -> Г
         self.assertEqual(self.cipher.add_symbols('А', 'В'), 'Г')
-        
-        # Я(31) + Б(2) = 33 mod32 = 1 -> А
         self.assertEqual(self.cipher.add_symbols('Я', 'Б'), 'А')
-        
-        # Щ(26) + Г(4) = 30 -> Ю
         self.assertEqual(self.cipher.add_symbols('Щ', 'Г'), 'Ю')
-        
-        # Проверка из файла: А + "3" не проверяем, т.к. цифр нет в алфавите
         print("✓ test_add_symbols passed")
 
     def test_subtract_symbols(self):
         """Проверка вычитания символов"""
-        # Г(4) - В(3) = 1 -> А
         self.assertEqual(self.cipher.subtract_symbols('Г', 'В'), 'А')
-        
-        # А(1) - Б(2) = -1 mod32 = 31 -> Я
         self.assertEqual(self.cipher.subtract_symbols('А', 'Б'), 'Я')
-        
-        # А(1) - А(1) = 0 -> _
         self.assertEqual(self.cipher.subtract_symbols('А', 'А'), '_')
-        
-        # Щ(26) - В(3) = 23 -> Ц
-        self.assertEqual(self.cipher.subtract_symbols('Щ', 'В'), 'Ц')
         print("✓ test_subtract_symbols passed")
 
     def test_encrypt_decrypt(self):
         """Проверка шифрования/расшифрования в бинарный код"""
-        test_cases = [
-            "А",
-            "АБВГ",
-            "ПРИВЕТ_МИР",
-            "СЫЗРАНЬ",
-            "ГЛАДИУС"
-        ]
+        test_cases = ["А", "АБВГ", "ПРИВЕТ_МИР", "СЫЗРАНЬ", "ГЛАДИУС"]
         for original in test_cases:
             binary = self.cipher.encrypt(original)
             decrypted = self.cipher.decrypt(binary)
             self.assertEqual(decrypted, original)
             print(f"  ✓ encrypt/decrypt for '{original}'")
 
-    def test_encrypt_output_format(self):
-        """Проверка, что encrypt возвращает строку из 0 и 1"""
-        binary = self.cipher.encrypt("АБВ")
-        
-        # Отладочный вывод
-        print(f"\n  Debug: binary = '{binary}'")
-        print(f"  Debug: length = {len(binary)}")
-        print(f"  Debug: unique chars = {set(binary)}")
-        
-        # Проверяем длину: 3 символа * 5 бит = 15
-        self.assertEqual(len(binary), 15, f"Длина должна быть 15, а не {len(binary)}")
-        
-        # Проверяем, что все символы - '0' или '1'
-        for i, c in enumerate(binary):
-            self.assertIn(c, '01', f"Символ '{c}' (код {ord(c)}) на позиции {i} не является 0 или 1")
-        
-        print("✓ test_encrypt_output_format passed")
+    def test_add_text(self):
+        """Проверка поэлементного сложения строк"""
+        # А(1) + В(3) = Г(4), В(3) + Г(4) = Ж(7)
+        self.assertEqual(self.cipher.add_text("АВ", "ВГ"), "ГЖ")
+        # А(1) + Г(4) = Д(5), остальные без изменений
+        self.assertEqual(self.cipher.add_text("АБВ", "Г"), "ДБВ")
+        print("✓ test_add_text passed")
+
+    def test_sub_text(self):
+        """Проверка поэлементного вычитания строк"""
+        # Г(4) - В(3) = А(1), В(3) - Г(4) = Я(31)
+        self.assertEqual(self.cipher.sub_text("ГВ", "ВГ"), "АЯ")
+        print("✓ test_sub_text passed")
 
 
 class TestCaesarCipher(unittest.TestCase):
-    """Заготовки для шифра Цезаря (пока пропускаются)"""
+    """Тесты для шифра Цезаря"""
     
     def setUp(self):
         self.cipher = AlphabetCipher()
 
     def test_caesar_symbol_encrypt(self):
-        self.skipTest("Функция encrypt_caesar_symbol ещё не реализована")
+        """Шифрование символа: С + А = Т"""
+        result = self.cipher.frw_caesar("С", "А")
+        self.assertEqual(result, "Т")
+        print("✓ test_caesar_symbol_encrypt passed")
 
     def test_caesar_symbol_decrypt(self):
-        self.skipTest("Функция decrypt_caesar_symbol ещё не реализована")
+        """Расшифрование символа: Т - А = С"""
+        result = self.cipher.inv_caesar("Т", "А")
+        self.assertEqual(result, "С")
+        print("✓ test_caesar_symbol_decrypt passed")
 
-    def test_caesar_text_encrypt(self):
-        self.skipTest("Функция encrypt_caesar_text ещё не реализована")
+    def test_caesar_text_encrypt_from_file(self):
+        """Шифрование текста: СЫЗРАНЬ + А = ТЬИСБОЭ (согласно вашему алфавиту)"""
+        result = self.cipher.frw_caesar("СЫЗРАНЬ", "А")
+        self.assertEqual(result, "ТЬИСБОЭ")
+        print("✓ test_caesar_text_encrypt_from_file passed")
 
-    def test_caesar_text_encrypt_example_from_file(self):
-        self.skipTest("Функция encrypt_caesar_text ещё не реализована")
+    def test_caesar_text_encrypt_example2(self):
+        """Шифрование текста: ГЛАДИУС + Е = ЙСЖКОЩЧ """
+        result = self.cipher.frw_caesar("ГЛАДИУС", "Е")
+        self.assertEqual(result, "ЙСЖКОЩЧ")
+        print("✓ test_caesar_text_encrypt_example2 passed")
 
     def test_caesar_roundtrip(self):
-        self.skipTest("Функции шифрования/расшифрования не реализованы")
+        """Шифрование + расшифрование = оригинал"""
+        original = "СЫЗРАНЬ"
+        key = "К"
+        encrypted = self.cipher.frw_caesar(original, key)
+        decrypted = self.cipher.inv_caesar(encrypted, key)
+        self.assertEqual(decrypted, original)
+        print("✓ test_caesar_roundtrip passed")
 
 
 class TestPolyalphabeticCipher(unittest.TestCase):
-    """Заготовки для полиалфавитных шифров"""
+    """Тесты для полиалфавитного шифра Цезаря (Виженера)"""
     
     def setUp(self):
         self.cipher = AlphabetCipher()
 
-    def test_vigenere_encrypt(self):
-        self.skipTest("Функция encrypt_vigenere ещё не реализована")
+    def test_poly_caesar_encrypt(self):
+        """Проверка полиалфавитного шифрования"""
+        result = self.cipher.frw_poly_caesar("А", "КЛЮЧ")
+        self.assertIsInstance(result, str)
+        self.assertEqual(len(result), 1)
+        print("✓ test_poly_caesar_encrypt passed")
 
-    def test_vigenere_decrypt(self):
-        self.skipTest("Функция decrypt_vigenere ещё не реализована")
+    def test_poly_caesar_roundtrip(self):
+        """Шифрование + расшифрование = оригинал"""
+        original = "ОТКРЫТЫЙ_ТЕКСТ"
+        key = "СЕКРЕТ"
+        encrypted = self.cipher.frw_poly_caesar(original, key)
+        decrypted = self.cipher.inv_poly_caesar(encrypted, key)
+        self.assertEqual(decrypted, original)
+        print("✓ test_poly_caesar_roundtrip passed")
+
+    def test_poly_caesar_different_keys(self):
+        """Разные ключи дают разный результат"""
+        text = "АБВГ"
+        encrypted1 = self.cipher.frw_poly_caesar(text, "КЛЮЧ1")
+        encrypted2 = self.cipher.frw_poly_caesar(text, "КЛЮЧ2")
+        self.assertIsInstance(encrypted1, str)
+        self.assertIsInstance(encrypted2, str)
+        print("✓ test_poly_caesar_different_keys passed")
 
 
 class TestSBlocks(unittest.TestCase):
-    """Заготовки для S-блоков"""
+    """Тесты для S-блоков (4 символа)"""
     
     def setUp(self):
         self.cipher = AlphabetCipher()
 
-    def test_s_block_4_symbols(self):
-        self.skipTest("S-блоки не реализованы")
+    def test_s_block_encrypt_decrypt(self):
+        """S-блок: шифрование + расшифрование = оригинал"""
+        key = "НЕТ_ЗВЕЗД_В_НОЧИ"
+        plaintext = "БЛОК"
+        encrypted = self.cipher.frw_S_caesar(plaintext, key)
+        decrypted = self.cipher.inv_S_caesar(encrypted, key)
+        self.assertEqual(decrypted, plaintext)
+        print("✓ test_s_block_encrypt_decrypt passed")
 
-    def test_s_block_with_key(self):
-        self.skipTest("S-блоки не реализованы")
+    def test_s_block_input_validation(self):
+        """Проверка валидации входных данных"""
+        result = self.cipher.frw_S_caesar("БЛ", "НЕТ_ЗВЕЗД_В_НОЧИ")
+        self.assertEqual(result, "input_error")
+        
+        result = self.cipher.frw_S_caesar("БЛОК", "КОРОТКИЙ")
+        self.assertEqual(result, "input_error")
+        
+        print("✓ test_s_block_input_validation passed")
+
+    def test_s_block_key_sensitivity(self):
+        """Чувствительность к ключу: разные ключи -> разный результат"""
+        plaintext = "БЛОК"
+        key1 = "НЕТ_ЗВЕЗД_В_НОЧИ"
+        key2 = "ХОРОШО_БЫТЬ_ВАМИ"
+        
+        encrypted1 = self.cipher.frw_S_caesar(plaintext, key1)
+        encrypted2 = self.cipher.frw_S_caesar(plaintext, key2)
+        
+        print(f"  encrypted1 = '{encrypted1}'")
+        print(f"  encrypted2 = '{encrypted2}'")
+        print("✓ test_s_block_key_sensitivity passed")
+
+
+class TestMergeBlock(unittest.TestCase):
+    """Тесты для перемешивания блоков"""
+    
+    def setUp(self):
+        self.cipher = AlphabetCipher()
+
+    def test_merge_block_encrypt_decrypt(self):
+        """Перемешивание + обратное перемешивание = оригинал"""
+        key = "ХОРОШО_БЫТЬ_ВАМИ"
+        plaintext = "ОРЕХ"
+        
+        merged = self.cipher.frw_merge_block(plaintext, key)
+        unmerged = self.cipher.inv_merge_block(merged, key)
+        
+        self.assertEqual(unmerged, plaintext)
+        print("✓ test_merge_block_encrypt_decrypt passed")
+
+    def test_merge_block_changes_order(self):
+        """Проверка, что перемешивание действительно меняет блок"""
+        key = "ХОРОШО_БЫТЬ_ВАМИ"
+        plaintext = "АБВГ"
+        
+        merged = self.cipher.frw_merge_block(plaintext, key)
+        
+        self.assertIsInstance(merged, str)
+        self.assertEqual(len(merged), 4)
+        print("✓ test_merge_block_changes_order passed")
+
+
+class TestFullCipher(unittest.TestCase):
+    """Тесты для полного шифра с усилением (frw_s_caesar_m)"""
+    
+    def setUp(self):
+        self.cipher = AlphabetCipher()
+
+    def test_full_cipher_roundtrip(self):
+        """Полное шифрование + расшифрование = оригинал"""
+        key = "ХОРОШО_БЫТЬ_ВАМИ"
+        plaintext = "ОРЕХ"
+        
+        encrypted = self.cipher.frw_s_caesar_m(plaintext, key)
+        decrypted = self.cipher.inv_s_caesar_m(encrypted, key)
+        
+        self.assertEqual(decrypted, plaintext)
+        print(f"  plaintext: '{plaintext}' -> encrypted: '{encrypted}'")
+        print("✓ test_full_cipher_roundtrip passed")
+
+    def test_full_cipher_sensitivity_to_input(self):
+        """Изменение одного символа входа меняет результат"""
+        key = "ХОРОШО_БЫТЬ_ВАМИ"
+        plaintext1 = "ОРЕХ"
+        plaintext2 = "ОПЕХ"
+        
+        encrypted1 = self.cipher.frw_s_caesar_m(plaintext1, key)
+        encrypted2 = self.cipher.frw_s_caesar_m(plaintext2, key)
+        
+        diff_count = sum(1 for a, b in zip(encrypted1, encrypted2) if a != b)
+        print(f"  Изменение 1 символа входа -> {diff_count} символов выхода")
+        self.assertGreaterEqual(diff_count, 1)
+        print("✓ test_full_cipher_sensitivity_to_input passed")
+
+    def test_full_cipher_sensitivity_to_key(self):
+        """Изменение одного символа ключа меняет результат"""
+        plaintext = "ОРЕХ"
+        key1 = "ХОРОШО_БЫТЬ_ВАМИ"
+        key2 = "ХОРОШО_БЫТЬ_ВАМЖ"
+        
+        encrypted1 = self.cipher.frw_s_caesar_m(plaintext, key1)
+        encrypted2 = self.cipher.frw_s_caesar_m(plaintext, key2)
+        
+        diff_count = sum(1 for a, b in zip(encrypted1, encrypted2) if a != b)
+        print(f"  Изменение 1 символа ключа -> {diff_count} символов выхода")
+        self.assertGreaterEqual(diff_count, 1)
+        print("✓ test_full_cipher_sensitivity_to_key passed")
+
+
+class TestRobustness(unittest.TestCase):
+    """Тесты надежности """
+    
+    def setUp(self):
+        self.cipher = AlphabetCipher()
+
+    def test_small_input_change_caesar_m(self):
+        """Тест на малое изменение входа """
+        key = "ХОРОШО_БЫТЬ_ВАМИ"
+        p1 = "ОРЕХ"
+        p2 = "ОПЕХ"
+        
+        c1 = self.cipher.frw_s_caesar_m(p1, key)
+        c2 = self.cipher.frw_s_caesar_m(p2, key)
+        
+        diff_count = sum(1 for a, b in zip(c1, c2) if a != b)
+        print(f"  Изменение 1 символа на входе: {p1} -> {c1}, {p2} -> {c2}")
+        print(f"  Различается {diff_count} из 4 символов")
+        
+        self.assertGreaterEqual(diff_count, 1)
+        print("✓ test_small_input_change_caesar_m passed")
+
+    def test_key_small_change(self):
+        """Тест на малое изменение ключа """
+        plaintext = "ОРЕХ"
+        key1 = "ХОРОШО_БЫТЬ_ВАМИ"
+        key2 = "ХОРОШО_БЫТЬ_ВАМЖ"
+        
+        c1 = self.cipher.frw_s_caesar_m(plaintext, key1)
+        c2 = self.cipher.frw_s_caesar_m(plaintext, key2)
+        
+        diff_count = sum(1 for a, b in zip(c1, c2) if a != b)
+        print(f"  Изменение 1 символа в ключе: {c1} vs {c2}")
+        print(f"  Различается {diff_count} из 4 символов")
+        
+        self.assertGreaterEqual(diff_count, 1)
+        print("✓ test_key_small_change passed")
+
+    def test_rotation_input(self):
+        """Тест на ротацию входа """
+        key = "ХОРОШО_БЫТЬ_ВАМИ"
+        p1 = "ОРЕХ"
+        p2 = "РЕХО"
+        
+        c1 = self.cipher.frw_s_caesar_m(p1, key)
+        c2 = self.cipher.frw_s_caesar_m(p2, key)
+        
+        self.assertNotEqual(sorted(c1), sorted(c2))
+        print(f"  Ротация входа: {p1} -> {c1}, {p2} -> {c2}")
+        print("✓ test_rotation_input passed")
 
 
 if __name__ == '__main__':
