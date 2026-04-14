@@ -617,4 +617,4 @@ class AlphabetCipher:
         return plaintext_block
 
 
-cipher = AlphabetCipher()
+
