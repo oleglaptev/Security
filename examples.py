@@ -1,7 +1,7 @@
 from alphabet_cipher import AlphabetCipher
 
-
 cipher = AlphabetCipher()
+
 print("-" * 30 + "Простые операции" + "-" * 50)
 print('Символ "О" в номер:', cipher.get_number_by_symbol("О"))
 print('Символ "Ж" в номер:', cipher.get_number_by_symbol("Ж"))
@@ -133,3 +133,203 @@ OUT1 = cipher.frw_s_caesar_m(IN1, K1)
 INV1 = cipher.inv_s_caesar_m(OUT1, K1)
 print(f"Перевод {IN1} шифром Цезаря c модификацией S-блоков с ключом {K1} :", OUT1)
 print(f"Обратный перевод {OUT1} шифра Цезаря c модификацией S-блоков с ключом {K1} :", INV1)
+print()
+
+print("-" * 30 + "Ядро с функцией шифрования" + "-" * 50)
+IN1 = "ХОРОШО_БЫТЬ_ВАМИ"
+IN2 = "КЬЕРКЕГОР_ПРОПАЛ"
+core_Caesar1 = cipher.core_Caesar(IN1, IN2)
+core_Caesar2 = cipher.core_Caesar(IN2, IN1)
+print(f"Сложение {IN1} и {IN2} ядром с шифром Цезаря :", core_Caesar1)
+print(f"Сложение {IN2} и {IN1} ядром с шифром Цезаря :", core_Caesar2)
+print()
+
+print("-" * 30 + "Confuse" + "-" * 50)
+IN = "ХОРОШО_БЫТЬ_ВАМИ"
+IN1 = "КЬЕРКЕГОР_ПРОПАЛ"
+IN2 = "ХОРОШО_ПРОБРОСИЛ"
+confuse1 = cipher.confuse(IN, IN1)
+confuse2 = cipher.confuse(IN, IN2)
+confuse3 = cipher.confuse(IN, IN)
+print(f"Confuse {IN} и {IN1}:", confuse1)
+print(f"Confuse {IN} и {IN2}:", confuse2)
+print(f"Confuse {IN} и {IN}:", confuse3)
+print()
+print("-" * 30 + "C-блок" + "-" * 50)
+IN1 = ["ХОРОШО_БЫТЬ_ВАМИ"]
+IN2 = ["ХОРОШО_БЫТЬ_ВАМИ",
+       "________________",
+       "________________",
+       "________________"]
+IN3 = ["ХОРОШО_БЫТЬ_ВАМИ",
+       "________А_______"]
+IN4 = ["ХОРОШО_БЫТЬ_ВАМИ",
+       "___А____________"]
+IN5 = ["ХОРОШО_БЫТЬ_ВАМИ", "КЬЕРКЕГОР_ПРОПАЛ"]
+IN6 = ["ЧЕРНЫЙ_АББАТ_ПОЛ", "ХОРОШО_БЫТЬ_ВАМИ", "КЬЕРКЕГОР_ПРОПАЛ"]
+IN7 = ["______А_________",
+       "________________",
+       "________________",
+       "________________"]
+IN8 = ["________________",
+       "________________",
+       "________________",
+       "________________"]
+IN9 = ["_____А__________",
+       "___________А____",
+       "_А______________",
+       "____________А___"]
+outlen = "16"
+c = cipher.C_block(IN1, outlen)
+print(f"С-блок {IN1} с длиной {outlen}:", c)
+c = cipher.C_block(IN2, outlen)
+print(f"С-блок {IN2} с длиной {outlen}:", c)
+c = cipher.C_block(IN3, outlen)
+print(f"С-блок {IN3} с длиной {outlen}:", c)
+c = cipher.C_block(IN4, outlen)
+print(f"С-блок {IN4} с длиной {outlen}:", c)
+outlen = "8"
+c = cipher.C_block(IN1, outlen)
+print(f"С-блок {IN1} с длиной {outlen}:", c)
+c = cipher.C_block(IN2, outlen)
+print(f"С-блок {IN2} с длиной {outlen}:", c)
+c = cipher.C_block(IN3, outlen)
+print(f"С-блок {IN3} с длиной {outlen}:", c)
+c = cipher.C_block(IN4, outlen)
+print(f"С-блок {IN4} с длиной {outlen}:", c)
+outlen = "16"
+c = cipher.C_block(IN5, outlen)
+print(f"С-блок {IN5} с длиной {outlen}:", c)
+outlen = "8"
+c = cipher.C_block(IN5, outlen)
+print(f"С-блок {IN5} с длиной {outlen}:", c)
+outlen = "5"
+c = cipher.C_block(IN5, outlen)
+print(f"С-блок {IN5} с длиной {outlen}:", c)
+outlen = "16"
+c = cipher.C_block(IN6, outlen)
+print(f"С-блок {IN6} с длиной {outlen}:", c)
+outlen = "8"
+c = cipher.C_block(IN6, outlen)
+print(f"С-блок {IN6} с длиной {outlen}:", c)
+outlen = "4"
+c = cipher.C_block(IN6, outlen)
+print(f"С-блок {IN6} с длиной {outlen}:", c)
+outlen = "16"
+c = cipher.C_block(IN7, outlen)
+A = c
+print(f"С-блок {IN7} с длиной {outlen}:", c)
+outlen = "8"
+c = cipher.C_block(IN7, outlen)
+print(f"С-блок {IN7} с длиной {outlen}:", c)
+outlen = "4"
+c = cipher.C_block(IN7, outlen)
+print(f"С-блок {IN7} с длиной {outlen}:", c)
+outlen = "16"
+c = cipher.C_block(IN8, outlen)
+B = c
+print(f"С-блок {IN8} с длиной {outlen}:", c)
+outlen = "8"
+c = cipher.C_block(IN8, outlen)
+print(f"С-блок {IN8} с длиной {outlen}:", c)
+outlen = "4"
+c = cipher.C_block(IN8, outlen)
+print(f"С-блок {IN8} с длиной {outlen}:", c)
+outlen = "16"
+c = cipher.C_block(IN9, outlen)
+C = c
+print(f"С-блок {IN9} с длиной {outlen}:", c)
+outlen = "8"
+c = cipher.C_block(IN9, outlen)
+print(f"С-блок {IN9} с длиной {outlen}:", c)
+outlen = "4"
+c = cipher.C_block(IN9, outlen)
+print(f"С-блок {IN9} с длиной {outlen}:", c)
+print(f"{A} - {C} = ", cipher.sub_text(A, C))
+print(f"{A} - {B} = ", cipher.sub_text(A, B))
+print(f"{B} - {C} = ", cipher.sub_text(B, C))
+print()
+print("-" * 30 + "Внутренние функции для губки" + "-" * 50)
+state0 = [["____", "____", "____", "____", "____"],
+          ["__А_", "____", "____", "____", "____"],
+          ["____", "____", "____", "____", "____"],
+          ["____", "____", "____", "____", "____"],
+          ["____", "____", "____", "____", "____"]]
+state11 = cipher.mix_cols(state0)
+print(*state11, sep="\n", end="\n")
+print()
+state12 = cipher.shatter_blocks(state11)
+print(*state12, sep="\n", end="\n")
+print()
+state13 = cipher.shift_rows(state12)
+print(*state13, sep="\n", end="\n")
+print()
+state21 = cipher.mix_cols(state13)
+print(*state21, sep="\n", end="\n")
+print()
+state22 = cipher.shatter_blocks(state21)
+print(*state22, sep="\n", end="\n")
+print()
+state23 = cipher.shift_rows(state22)
+print(*state23, sep="\n", end="\n")
+print()
+state31 = cipher.mix_cols(state23)
+print(*state31, sep="\n", end="\n")
+print()
+state32 = cipher.shatter_blocks(state31)
+print(*state32, sep="\n", end="\n")
+print()
+state33 = cipher.shift_rows(state32)
+print(*state33, sep="\n", end="\n")
+print()
+state41 = cipher.mix_cols(state33)
+print(*state41, sep="\n", end="\n")
+print()
+state42 = cipher.shatter_blocks(state41)
+print(*state42, sep="\n", end="\n")
+print()
+state43 = cipher.shift_rows(state42)
+print(*state43, sep="\n", end="\n")
+print()
+
+print()
+print("-" * 30 + "Губка" + "-" * 50)
+state0 = [["____", "____", "____", "____", "____"],
+          ["____", "____", "____", "____", "____"],
+          ["____", "____", "____", "____", "____"],
+          ["____", "____", "____", "____", "____"],
+          ["____", "____", "____", "____", "____"]]
+IN1 = "_А__"
+IN2 = "ВИЛЯ"
+IN3 = "ОЗЛ_"
+IN4 = "___М"
+state1 = cipher.sponge_absorb(state0, IN1)
+print(*state1, sep="\n", end="\n")
+print()
+state2 = cipher.sponge_absorb(state1, IN2)
+print(*state2, sep="\n", end="\n")
+print()
+state3 = cipher.sponge_absorb(state2, IN3)
+print(*state3, sep="\n", end="\n")
+print()
+state4 = cipher.sponge_absorb(state3, IN4)
+print(*state4, sep="\n", end="\n")
+print()
+
+stateX = [["БЫ_Щ", "ЙЖ_Б", "ЮФ_Е", "БЫ_Щ", "ЮД_Е"],
+          ["Ы_ЩБ", "Ж_БЙ", "Ф_ЕЮ", "Ы_ЩБ", "Л_ЗЗ"],
+          ["Ы_ЩБ", "Ж_БЙ", "Ф_ЕЮ", "У_ЧЧ", "Д_ЕЮ"],
+          ["Ы_ЩБ", "Ж_БЙ", "Ь_ЗЗ", "Ы_ЩБ", "Д_ЕЮ"],
+          ["Ы_ЩБ", "____", "Ф_ЕЮ", "Ы_ЩБ", "Д_ЕЮ"]]
+
+state1x = cipher.sponge_squeeze(stateX)
+out1 = state1x[0]
+state1x1 = state1x[1]
+print(out1)
+print(*state1x1, sep='\n', end="\n")
+print()
+
+print()
+print("-" * 30 + "Хеш" + "-" * 50)
+IN1 = "КАТЕГОРИЧЕСКИЙ_ИМПЕРАТИВ"
+print(cipher.SpongeFun_hash(IN1))
