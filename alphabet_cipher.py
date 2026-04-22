@@ -1,5 +1,4 @@
-import copy
-
+import math
 
 class AlphabetCipher:
     def __init__(self):
@@ -773,11 +772,9 @@ class AlphabetCipher:
         подстановки и сжатие.
 
         Алгоритм работы:
-        1. Инициализирует массив констант C четырьмя предопределёнными
-           16-символьными строками ("векторами инициализации").
+        1. Инициализирует массив констант C четырьмя предопределёнными 16-символьными строками ("векторами инициализации").
         2. Проверяет, что все входные блоки имеют длину 16 символов.
-        3. Поэлементно складывает каждый входной блок с соответствующей
-           константой из C (операция add_text).
+        3. Поэлементно складывает каждый входной блок с соответствующей константой из C (операция add_text).
         4. Применяет каскад преобразований:
            a. mixinputs(C) — смешивание четырёх блоков
            b. core_Caesar(C[0], C[2]) — ядровое преобразование пары блоков
@@ -962,14 +959,14 @@ class AlphabetCipher:
         """
         a = state
         str1 = b_in + a[0][0] + b_in + a[0][0]
-        x = ["____"] * 4
-        for i in range(4):
-            for j in range(4):
+        x = ["____"] * 5
+        for i in range(5):
+            for j in range(5):
                 x[i] = self.add_text(x[i], a[i][j])
 
         str2 = x[0] + x[1] + x[2] + x[3]
 
-        a[0][0] = self.C_block([str1, str2], "4")  # Здесь возможно нужно поменять аргументы str местами
+        a[0][0] = self.C_block([str2, str1], 4)  # Здесь возможно нужно поменять аргументы str местами
         a = self.mix_cols(a)
         a = self.shatter_blocks(a)
         a = self.shift_rows(a)
@@ -1017,9 +1014,9 @@ class AlphabetCipher:
         a = self.mix_cols(a)
         a = self.shatter_blocks(a)
         a = self.shift_rows(a)
-        x = ["____"] * 4
-        for i in range(4):
-            for j in range(4):
+        x = ["____"] * 5
+        for i in range(5):
+            for j in range(5):
                 x[i] = self.add_text(x[i], a[i][j])
         str = x[0] + x[1] + x[2] + x[3]
         block = self.C_block([str], "4")
@@ -1080,8 +1077,170 @@ class AlphabetCipher:
             tmp = MSG[i * 4: i * 4 + 4]
             state = self.sponge_absorb(state, tmp)
         out = ""
-        for i in range(15):
+        for i in range(16):
             TMP = self.sponge_squeeze(state)
             out += TMP[0]
             state = TMP[1]
+        return out
+
+    def block2num(self, block_in):
+        out = "input_error"
+        if len(block_in) == 4:
+            out = 0
+            pos = 1
+            tmp = self.text2array(block_in)
+            for i in range(3, -1, -1):
+                out += pos * tmp[i]
+                pos = 32 * pos
+        return out
+
+    def div(self, num_in, den_in):
+        return math.trunc(num_in / den_in)
+
+    def num2block(self, num_in):
+        rem = num_in
+        tmp = [0, 0, 0, 0]
+        for i in range(4):
+            tmp[3-i] = rem % 32
+            rem = self.div(rem, 32)
+        return self.array2text(tmp)
+
+    def dec2bin(self, num_in):
+        return f"{num_in:020b}"
+
+    def bin2dec(self, bin_in):
+        return int(bin_in, 2)
+
+    def initialize_PRNG(self, seed_in):
+        const = ["ПЕРВОЕ_АКТЕРСТВО",
+                 "ВТОРОЙ_ДАЛЬТОНИК",
+                 "ТРЕТЬЯ_САДОВНИЦА",
+                 "ЧЕТВЕРТЫЙ_ГОБЛИН"]
+        value = ["", "", "", ""]
+        for i in range(4):
+            value[i] = self.C_block([const[i], seed_in], 16)
+        secret = self.C_block(value, 16)
+        out = ['', '', '', '']
+        for i in range(4):
+            tmp = value[i]
+            TMP = ""
+            for j in range(4):
+                tmp = self.add_text(tmp, const[i])
+                TMP += self.C_block([tmp, secret], 4)
+                tmp = self.add_text(tmp, TMP)
+            out[i] = TMP[4:4+12]
+        return out
+
+    def block2bin(self, block_in):
+        tmp = self.block2num(block_in)
+        return self.dec2bin(tmp)
+
+    def bin2block(self, bin_in):
+        tmp = self.bin2dec(bin_in)
+        return self.num2block(tmp)
+
+    def push_reg(self, bin_in: str, bool_in):
+        out = [''] * len(bin_in)
+        n = len(bin_in) - 2
+        for i in range(n, -1, -1):
+            out[i] = bin_in[i+1]
+        index = len(bin_in) - 1
+        out[index] = str(bool_in)
+        res = ''.join(out)
+        return res
+
+    def taps2bin(self, taps_in):
+        out = ['_'] * 20
+        taps = sorted(taps_in, reverse=True)
+        last = taps[0]
+        y = 20 - last
+        if y > 0:
+            for i in range(y):
+                out[i] = "0"
+        j = 0
+        for i in range(last):
+            if last - i == taps[j]:
+                out[y + i] = "1"
+                j += 1
+            else:
+                out[y + i] = "0"
+            if j > len(taps) - 1:
+                break
+        for i in range(len(out)):
+            if out[i] == "_":
+                out[i] = "0"
+        res = ''.join(out)
+        return res
+
+    def LFSR_push(self, state_in, taps_in):
+        N = min(len(state_in), len(taps_in))
+        tmp = 0
+        for i in range(N):
+            tmp += int(state_in[i]) & int(taps_in[i])
+        out = self.push_reg(state_in, tmp % 2)
+        return out
+
+    def LFSR_next(self, state_in, taps_in):
+        state = state_in
+        stream = []
+        for i in range(20):
+            state = self.LFSR_push(state, taps_in)
+            stream.append(state[19])
+        stream = "".join(stream)
+        return stream, state
+
+    def AS_LFSR_push(self, state_in, taps_in):
+        lfsr0 = self.LFSR_push(state_in[0], taps_in[0])
+        lfsr1 = self.LFSR_push(state_in[1], taps_in[1])
+        lfsr2 = self.LFSR_push(state_in[2], taps_in[2])
+        if lfsr0[19] == "0":
+            stream = lfsr1[19]
+        else:
+            stream = lfsr2[19]
+        state_out = [lfsr0, lfsr1,lfsr2]
+        return stream, state_out
+
+    def seed2bins(self, array_in):
+        out = []
+        for i in range(3):
+            out.append(self.block2bin(array_in[i]))
+        return out
+
+    def AS_LFSR_next(self,state_in, taps_in):
+        state_set = state_in
+        stream = []
+        for i in range(20):
+            tmp = self.AS_LFSR_push(state_set, taps_in)
+            state_set = tmp[1]
+            stream.append(tmp[0])
+        stream = "".join(stream)
+        return stream, state_set
+
+    def C_AS_LFSR_next(self, init_flag, state_in, seed_in, set_in):
+        out = "something_wrong"
+        stream = ""
+        check = 0
+        state = []
+        if init_flag == "up":
+            INIT = self.initialize_PRNG(seed_in)
+            for i in range(4):
+                state.append(self.seed2bins([INIT[i][0:4], INIT[i][4:8], INIT[i][8:12]]))
+                check = 1
+        elif init_flag == "down":
+            state = state_in
+            check = 1
+        if check:
+            for j in range(4):
+                for k in range(4):
+                    T = self.AS_LFSR_next(state[k], set_in[j])
+                    state[k] = T[1]
+                    if k == 0:
+                        tmp = T[0]
+                    else:
+                        tmp_list = []
+                        for i in range(20):
+                            tmp_list.append(str((int(T[0][i]) + int(tmp[i])) % 2))
+                        tmp = "".join(tmp_list)
+                stream += self.bin2block(tmp)
+            out = [stream, state]
         return out
