@@ -1,7 +1,6 @@
 from alphabet_cipher import AlphabetCipher
 
 cipher = AlphabetCipher()
-'''
 print("-" * 30 + "Простые операции" + "-" * 50)
 print('Символ "О" в номер:', cipher.get_number_by_symbol("О"))
 print('Символ "Ж" в номер:', cipher.get_number_by_symbol("Ж"))
@@ -391,7 +390,7 @@ print(f1)
 print(f"Хеш от {IN6}:")
 print(g1)
 
-'''
+
 print("-" * 30 + "Вспомогательные для генераторов" + "-" * 50)
 block1 = "АБВГ"
 block2 = "_ЯЗЬ"
@@ -484,7 +483,8 @@ res3 = cipher.taps2bin(taps3)
 res4 = cipher.taps2bin(taps4)
 res5 = cipher.taps2bin(taps5)
 res6 = cipher.taps2bin(taps6)
-
+print()
+print("-" * 30 + "Вентили" + "-" * 50)
 print(f"Вентили {taps1} в двоичном виде: {res1}")
 print(f"Вентили {taps2} в двоичном виде: {res2}")
 print(f"Вентили {taps3} в двоичном виде: {res3}")
@@ -514,7 +514,8 @@ for i in range(10):
     seq1, st1 = cipher.LFSR_next(seq1, T1)
     print(f"Перевод в текст состояния {i} для второго набора:", cipher.bin2block(seq2))
     seq2, st2 = cipher.LFSR_next(seq2, T2)
-
+print()
+print("-" * 30 + "LFSR" + "-" * 50)
 seed1 = "ЛЕРА"
 seed2 = "КЛОН"
 seed3 = "КОНЯ"
@@ -549,5 +550,118 @@ sets = [
 ]
 seed = "АБВГДЕЖЗИЙКЛМНОП"
 out = cipher.C_AS_LFSR_next("up", -1, seed, sets)
+intern = out[1]
+for i in range(1, 9):
+    print(out[0])
+    out = cipher.C_AS_LFSR_next("down", intern, -1, sets)
+    intern = out[1]
 print(out[0])
-print(*out[1], sep="\n")
+
+
+inA = "АГАТ"
+inB = "ТАГА"
+inA1 = "КОЛЕНЬКА"
+inB1 = "МТВ_ТЛЕН"
+inA2 = "ТОРТ_ХОЧЕТ_ГОРКУ"
+inB2 = "МТВ_ВСЕ_ЕЩЕ_ТЛЕН"
+
+subblocks_xor1 = cipher.subblocks_xor(inA, inB)
+blocks_xor1 = cipher.block_xor(inA, inB)
+add1 = cipher.add_text(inA, inB)
+blocks_xor2 = cipher.block_xor(inA1, inB1)
+add2 = cipher.add_text(inA1, inB1)
+block_xor3 = cipher.block_xor(inA2, inB2)
+add3 = cipher.add_text(inA2, inB2)
+print(f"Первая пара данных: {inA} и {inB}")
+print(f"XOR подблоков: {subblocks_xor1}; XOR блоков: {blocks_xor1}; Сумма: {add1}")
+print(f"Вторая пара данных: {inA1} и {inB1}")
+print(f"XOR блоков: {blocks_xor2}; Сумма: {add2}")
+print(f"Третья пара данных: {inA2} и {inB2}")
+print(f"XOR блоков: {block_xor3}; Сумма: {add3}")
+print(f"XOR {block_xor3} и {inB2}:", cipher.block_xor(block_xor3, inB2))
+print(f"XOR {block_xor3} и {inA2}:", cipher.block_xor(block_xor3, inA2))
+
+key = "ПОЛИМАТ_ТЕХНОБОГ"
+print(cipher.produce_round_keys(key, 6, sets))
+p1 = cipher.frw_p_scitala("ДЖИГУРДА")
+p2 = cipher.frw_p_scitala("ДЖИГУРДАЯ")
+p3 = cipher.frw_p_scitala("АЭРОСМИТ")
+p4 = cipher.frw_p_scitala("БАЭРОСМИТ")
+print(p1)
+print(cipher.inv_p_scitala(p1))
+print(p2)
+print(cipher.inv_p_scitala(p2))
+print(p3)
+print(cipher.inv_p_scitala(p3))
+print(p4)
+print(cipher.inv_p_scitala(p4))
+key = "ЗОЛОТУХА_ПИКЕТКА"
+in1 = "ГОР_СВЕТ"
+in2 = "ЕГОР_КОТ"
+in3 = "АААААААА"
+in4 = "ААААААА_"
+out1 = cipher.frw_routine_feistel(in1, key)
+out2 = cipher.frw_routine_feistel(in2, key)
+out3 = cipher.frw_routine_feistel(in3, key)
+out4 = cipher.frw_routine_feistel(in4, key)
+print(out1)
+print(cipher.inv_routine_feistel(out1, key))
+print(out2)
+print(cipher.inv_routine_feistel(out2, key))
+print(out3)
+print(cipher.inv_routine_feistel(out3, key))
+print(out4)
+print(cipher.inv_routine_feistel(out4, key))
+X = "ПРОВОРПВ"
+Y = "АКАПЕЛЛО"
+X1 = cipher.bit_shift(X)
+X2 = cipher.bit_shift_r(X1)
+X3 = cipher.bit_swap(X)
+X4 = cipher.bit_swap(X3)
+print(X1, X2, X3, X4)
+Y1 = cipher.bit_shift(Y)
+Y2 = cipher.bit_shift_r(Y1)
+Y3 = cipher.bit_swap(Y)
+Y4 = cipher.bit_swap(Y3)
+print(Y1, Y2, Y3, Y4)
+out1 = cipher.frw_inner_feistel(in1, key, 2)
+out2 = cipher.frw_inner_feistel(in2, key, 4)
+rout1 = cipher.inv_inner_feistel(out1, key, 2)
+rout2 = cipher.inv_inner_feistel(out2, key, 4)
+print(out1, rout1, out2, rout2)
+out3 = cipher.frw_inner_feistel(in3, key, 1)
+out4 = cipher.frw_inner_feistel(in4, key, 1)
+print(out3, out4, cipher.sub_text(out3, out4))
+out5 = cipher.frw_inner_feistel(in3, key, 2)
+out6 = cipher.frw_inner_feistel(in4, key, 2)
+print(out5, out6, cipher.sub_text(out5, out6))
+out7 = cipher.frw_inner_feistel(in3, key, 3)
+out8 = cipher.frw_inner_feistel(in4, key, 3)
+print(out7, out8, cipher.sub_text(out7, out8))
+out9 = cipher.frw_inner_feistel(in3, key, 4)
+out10 = cipher.frw_inner_feistel(in4, key, 4)
+print(out9, out10, cipher.sub_text(out9, out10))
+
+in1 = "КОРЫСТЬ_СЛОНА_ЭХ"
+in2 = "НУЖНО_БОЛЬШЕ_ПЫЩ"
+key = "МТВ_ВСЕ_ЕЩЕ_ТЛЕН"
+out1 = cipher.round_feistel(in1, key)
+out2 = cipher.round_feistel(in2, key)
+print(out1, out2)
+tmp1 = cipher.swap_blocks(out1)
+tmp2 = cipher.swap_blocks(out2)
+print(tmp1, tmp2)
+out3 = cipher.round_feistel(tmp1, key)
+out4 = cipher.round_feistel(tmp2, key)
+print(out3, out4)
+tmp3 = cipher.swap_blocks(out3)
+tmp4 = cipher.swap_blocks(out4)
+print(tmp3, tmp4)
+keys1 = cipher.produce_round_keys(key, 6, sets)
+print(*keys1, sep='\n')
+out1 = cipher.frw_feistel(in1, keys1, 1)
+lout1 = cipher.inv_feistel(out1, keys1, 1)
+print(out1, lout1)
+out2 = cipher.frw_feistel(in2, keys1, 4)
+lout2 = cipher.inv_feistel(out2, keys1, 4)
+print(out2, lout2)
